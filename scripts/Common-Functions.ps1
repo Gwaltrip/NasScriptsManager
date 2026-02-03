@@ -188,7 +188,7 @@ function Update-ProgressStatus {
         $eta = [TimeSpan]::FromSeconds($remaining / $rate)
     }
 
-    $status = "$StatusPrefix: $Current/$Total ($pct%) | Elapsed: $(Format-TimeSpanCompact $elapsed) | ETA: $(Format-TimeSpanCompact $eta) | Rate: $([math]::Round($rate,2))/s"
+    $status = "${StatusPrefix}: $Current/$Total ($pct%) | Elapsed: $(Format-TimeSpanCompact $elapsed) | ETA: $(Format-TimeSpanCompact $eta) | Rate: $([math]::Round($rate,2))/s"
 
     Write-Progress -Id $Id -Activity $Activity -Status $status -PercentComplete $pct
 }
