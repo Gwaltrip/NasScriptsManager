@@ -37,11 +37,7 @@ if (-not (Test-Path -Path $ImageTarget)) {
 $cachePath = Join-Path -Path $ImageTarget -ChildPath $CacheFileName
 $tempCachePath = $cachePath + ".tmp"
 
-function Write-Log {
-    param([Parameter(Mandatory=$true)][string]$Message)
-    $ts = (Get-Date).ToString("yyyy-MM-dd HH:mm:ss")
-    Write-Host "[$ts] $Message"
-}
+. "$PSScriptRoot\Common-Functions.ps1"
 
 Write-Log "Target:        $ImageTarget"
 Write-Log "Cache:         $cachePath"

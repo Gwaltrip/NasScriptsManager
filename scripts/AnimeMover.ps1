@@ -11,34 +11,34 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-function Write-Log {
-    param([Parameter(Mandatory)][string]$Message)
-    $ts = (Get-Date).ToString('yyyy-MM-dd HH:mm:ss')
-    Write-Host "[$ts] $Message"
-}
-
-function Ensure-Directory {
-    param([Parameter(Mandatory)][string]$Path)
-    if (-not (Test-Path -LiteralPath $Path)) {
-        New-Item -ItemType Directory -Path $Path -Force | Out-Null
-    }
-}
+. "$PSScriptRoot\Common-Functions.ps1"
 
 function Load-AnimeMoverConfig {
     param([Parameter(Mandatory)][string]$Path)
 
     if (-not (Test-Path -LiteralPath $Path)) {
         return [pscustomobject]@{
-            groups = @('SubsPlease')
+            groups = @()
+            acceptAnyGroup = $true
             acceptAnyBracketTag = $false
             recurseTaggedFolders = $true
         }
     }
 
     $cfg = (Get-Content -LiteralPath $Path -Raw) | ConvertFrom-Json
-    if (-not $cfg.groups) { $cfg.groups = @('SubsPlease') }
+
+    if ($null -eq $cfg.acceptAnyGroup) { $cfg.acceptAnyGroup = $false }
+
+    if ($cfg.acceptAnyGroup) {
+        $cfg.groups = @()
+    }
+    else {
+        if ($null -eq $cfg.groups) { $cfg.groups = @() }
+    }
+
     if ($null -eq $cfg.acceptAnyBracketTag) { $cfg.acceptAnyBracketTag = $false }
     if ($null -eq $cfg.recurseTaggedFolders) { $cfg.recurseTaggedFolders = $true }
+
     return $cfg
 }
 

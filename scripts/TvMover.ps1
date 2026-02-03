@@ -9,6 +9,8 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+. "$PSScriptRoot\Common-Functions.ps1"
+
 function Write-Log {
     param([Parameter(Mandatory)][string]$Message)
     $ts = (Get-Date).ToString('yyyy-MM-dd HH:mm:ss')

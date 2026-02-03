@@ -22,18 +22,14 @@ if ($PSVersionTable.PSVersion.Major -lt 7) {
     throw "This script requires PowerShell 7+."
 }
 
+. "$PSScriptRoot\Common-Functions.ps1"
+
 $sentFilesPath = Join-Path ([Environment]::GetFolderPath('Desktop')) $SentFilesName
 $indexPath     = Join-Path $ImageTarget $IndexFileName
 $tempIndexPath = $indexPath + ".tmp"
 
 function Get-UniqueSuffix {
     return "-new-" + (-join ((65..90) + (97..122) | Get-Random -Count 5 | ForEach-Object {[char]$_}))
-}
-
-function Write-Log {
-    param([string]$Message)
-    $ts = (Get-Date).ToString("yyyy-MM-dd HH:mm:ss")
-    Write-Host "[$ts] $Message"
 }
 
 # Load sent list

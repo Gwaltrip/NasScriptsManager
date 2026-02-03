@@ -9,11 +9,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-function Write-Log {
-    param([Parameter(Mandatory)][string]$Message)
-    $ts = (Get-Date).ToString('yyyy-MM-dd HH:mm:ss')
-    Write-Host "[$ts] $Message"
-}
+. "$PSScriptRoot\Common-Functions.ps1"
 
 function Ensure-Directory {
     param([Parameter(Mandatory)][string]$Path)

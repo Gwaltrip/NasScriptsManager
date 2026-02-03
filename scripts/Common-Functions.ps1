@@ -87,61 +87,6 @@ function Resolve-DestinationFile {
     return (Join-Path -Path $DestinationDir -ChildPath $name)
 }
 
-function Copy-FileWithRetry {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory)][string]$SourceFile,
-
-        # Pass either DestinationFile OR DestinationDir.
-        [string]$DestinationFile,
-        [string]$DestinationDir,
-
-        [int]$MaxRetries = 3,
-        [int]$RetryDelaySeconds = 2,
-
-        # If true, and dest exists with same length, skip copy.
-        [bool]$SkipIfSameLength = $true
-    )
-
-    if (-not (Test-Path -LiteralPath $SourceFile)) {
-        Write-Log -Level 'WARN' -Message "Source missing: $SourceFile"
-        return [pscustomobject]@{ Status='MISSING_SOURCE'; Source=$SourceFile; Destination=$null }
-    }
-
-    $dest = Resolve-DestinationFile -SourceFile $SourceFile -DestinationFile $DestinationFile -DestinationDir $DestinationDir
-    $destDir = Split-Path -Parent $dest
-    Ensure-Directory -Path $destDir
-
-    if ($SkipIfSameLength -and (Test-Path -LiteralPath $dest) -and (Test-SameFileByLength -SourceFile $SourceFile -DestinationFile $dest)) {
-        return [pscustomobject]@{ Status='SKIPPED'; Source=$SourceFile; Destination=$dest }
-    }
-
-    $attempt = 0
-    while ($true) {
-        try {
-            $attempt++
-            Copy-Item -LiteralPath $SourceFile -Destination $dest -Force -ErrorAction Stop
-
-            # Basic verification: length match after copy
-            if (-not (Test-SameFileByLength -SourceFile $SourceFile -DestinationFile $dest)) {
-                throw "Copy verification failed (length mismatch)."
-            }
-
-            return [pscustomobject]@{ Status='COPIED'; Source=$SourceFile; Destination=$dest; Attempts=$attempt }
-        }
-        catch {
-            $msg = $_.Exception.Message
-            if ($attempt -ge $MaxRetries) {
-                Write-Log -Level 'ERROR' -Message "Copy failed after $attempt attempt(s): $SourceFile -> $dest | $msg"
-                return [pscustomobject]@{ Status='FAILED'; Source=$SourceFile; Destination=$dest; Attempts=$attempt; Error=$msg }
-            }
-
-            Write-Log -Level 'WARN' -Message "Copy failed (attempt $attempt/$MaxRetries). Retrying in $RetryDelaySeconds s... | $SourceFile -> $dest | $msg"
-            Start-Sleep -Seconds $RetryDelaySeconds
-        }
-    }
-}
-
 function Format-TimeSpanCompact {
     [CmdletBinding()]
     param([Parameter(Mandatory)][TimeSpan]$TimeSpan)
