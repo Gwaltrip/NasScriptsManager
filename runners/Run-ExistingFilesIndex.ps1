@@ -25,11 +25,7 @@ param(
 )
 
 
-function Write-Log {
-    param([Parameter(Mandatory=$true)][string]$Message)
-    $ts = (Get-Date).ToString("yyyy-MM-dd HH:mm:ss")
-    Write-Host "[$ts] $Message"
-}
+. "$PSScriptRoot\Common-Functions.ps1"
 
 # Default ImageTarget to NasRoot if not explicitly provided
 if (-not $ImageTarget) {

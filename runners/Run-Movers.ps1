@@ -17,11 +17,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-function Write-Log {
-    param([Parameter(Mandatory)][string]$Message)
-    $ts = (Get-Date).ToString("yyyy-MM-dd HH:mm:ss")
-    Write-Host "[$ts] $Message"
-}
+. "$PSScriptRoot\Common-Functions.ps1"
 
 function Invoke-NasMover {
     param(
@@ -30,7 +26,8 @@ function Invoke-NasMover {
         [Parameter(Mandatory)][string]$ScriptName,
         [Parameter(Mandatory)][string]$SourceDirectory,
         [Parameter(Mandatory)][int]$LogEvery,
-        [Parameter(Mandatory)][switch]$ContinueOnError
+        [Parameter(Mandatory)][switch]$ContinueOnError,
+        [Parameter()][string]$ConfigPath = $null
     )
 
     $scriptPath = Join-Path -Path $NasRoot -ChildPath $ScriptName
@@ -46,17 +43,19 @@ function Invoke-NasMover {
     Write-Log "Launching $Name from NAS"
     Write-Log "  Source      : $SourceDirectory"
     Write-Log "  Destination : $NasRoot"
+    Write-Log "  ConfigPath : $ConfigPath"
 
     $args = @(
         '-SourceDirectory', $SourceDirectory,
         '-DestinationBase', $NasRoot,
-        '-LogEvery', $LogEvery
+        '-LogEvery', $LogEvery,
+        '-ConfigPath', $ConfigPath
     )
 
     $sw = [System.Diagnostics.Stopwatch]::StartNew()
 
     try {
-        pwsh -NoProfile -ExecutionPolicy Bypass -File $scriptPath @args
+        pwsh -ExecutionPolicy Bypass -File $scriptPath @args
 
         if ($LASTEXITCODE -ne 0) {
             throw "$Name exited with code $LASTEXITCODE"
@@ -95,7 +94,8 @@ Invoke-NasMover `
     -ScriptName 'AnimeMover.ps1' `
     -SourceDirectory $sourceAnime `
     -LogEvery $LogEvery `
-    -ContinueOnError:$ContinueOnError
+    -ContinueOnError:$ContinueOnError `
+    -ConfigPath $NasAnimeRoot"\AnimeMover.config.json"
 
 Invoke-NasMover `
     -Name 'TvMover' `

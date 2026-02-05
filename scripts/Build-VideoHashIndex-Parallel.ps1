@@ -1,7 +1,7 @@
 #!/usr/bin/env pwsh
 
 param(
-    [string]$AnimeRoot = "\\192.168.1.1\anime",
+    [string]$VideoRoot = "\\192.168.1.1\anime",
 
     # Final output built from the journal at the end
     [string]$OutFile = "\\192.168.1.1\anime\AnimeHashIndex.clixml",
@@ -22,18 +22,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-function Write-Log {
-    param([Parameter(Mandatory)][string]$Message)
-    $ts = (Get-Date).ToString("yyyy-MM-dd HH:mm:ss")
-    Write-Host "[$ts] $Message"
-}
-
-function Ensure-Directory {
-    param([Parameter(Mandatory)][string]$Path)
-    if (-not (Test-Path -LiteralPath $Path)) {
-        New-Item -ItemType Directory -Path $Path -Force | Out-Null
-    }
-}
+. "$PSScriptRoot\Common-Functions.ps1"
 
 function New-PathHashSet {
     New-Object 'System.Collections.Generic.HashSet[string]' ([System.StringComparer]::OrdinalIgnoreCase)
@@ -88,7 +77,7 @@ function Update-Progress {
 
     $pct = if ($Total -gt 0) { [int](($Processed / $Total) * 100) } else { 100 }
 
-    Write-Progress -Id 1 -Activity "Hashing anime (resume-capable)" `
+    Write-Progress -Id 1 -Activity "Hashing video (resume-capable)" `
         -Status ("[{0}/{1} ({2}%) | ETA: {3} | Rate: {4:N2} files/sec | OK: {5} | ERR: {6}]" -f $Processed, $Total, $pct, $eta, $rate, $OkCount, $ErrCount) `
         -PercentComplete $pct -SecondsRemaining $etaSec
 }
@@ -202,7 +191,7 @@ function Write-ClixmlFromJournal {
     }
 
     # Write locally first, then copy to the share to avoid SMB hiccups.
-    $tmpLocal = Join-Path $env:TEMP ("AnimeHashIndex_{0}.clixml" -f (Get-Random))
+    $tmpLocal = Join-Path $env:TEMP ("videoHashIndex_{0}.clixml" -f (Get-Random))
     $tmpRemote = "$OutFile.tmp"
 
     try {
@@ -237,15 +226,15 @@ function Write-ClixmlFromJournal {
 # Main
 # ----------------------------
 
-if (-not (Test-Path -LiteralPath $AnimeRoot)) {
-    throw "Anime root not found: $AnimeRoot"
+if (-not (Test-Path -LiteralPath $VideoRoot)) {
+    throw "Video root not found: $VideoRoot"
 }
 
 Ensure-Directory -Path (Split-Path -Path $OutFile -Parent)
 Ensure-Directory -Path (Split-Path -Path $JournalFile -Parent)
 
-Write-Log "Building anime hash index (resume-capable)"
-Write-Log "Root: $AnimeRoot"
+Write-Log "Building video hash index (resume-capable)"
+Write-Log "Root: $VideoRoot"
 Write-Log "OutFile: $OutFile"
 Write-Log "Journal: $JournalFile"
 Write-Log "Algorithm: $Algorithm | ThrottleLimit: $ThrottleLimit"
@@ -263,7 +252,7 @@ $alreadyHashed = Load-JournalHashedPaths -Path $JournalFile
 if ($null -eq $alreadyHashed) { $alreadyHashed = New-PathHashSet }
 
 $files = @(
-    Get-ChildItem -LiteralPath $AnimeRoot -File -Recurse -ErrorAction SilentlyContinue |
+    Get-ChildItem -LiteralPath $VideoRoot -File -Recurse -ErrorAction SilentlyContinue |
         Where-Object {
             $ext = [System.IO.Path]::GetExtension($_.Name)
             if (-not $ext) { return $false }
@@ -285,7 +274,7 @@ Write-Log "Hashing now: $totalToHash files"
 
 if ($totalToHash -eq 0) {
     Write-Log "Nothing to do."
-    Write-ClixmlFromJournal -JournalFile $JournalFile -OutFile $OutFile -Algorithm $Algorithm -Root $AnimeRoot -StartedUtc $startedUtc
+    Write-ClixmlFromJournal -JournalFile $JournalFile -OutFile $OutFile -Algorithm $Algorithm -Root $VideoRoot -StartedUtc $startedUtc
     exit 0
 }
 
@@ -469,8 +458,8 @@ finally {
     }
 }
 
-Write-Progress -Id 1 -Activity "Hashing anime (resume-capable)" -Completed
+Write-Progress -Id 1 -Activity "Hashing video (resume-capable)" -Completed
 
 Write-Log "Hashing run finished. This run: processed=$processed ok=$okCount err=$errCount"
-Write-ClixmlFromJournal -JournalFile $JournalFile -OutFile $OutFile -Algorithm $Algorithm -Root $AnimeRoot -StartedUtc $startedUtc
+Write-ClixmlFromJournal -JournalFile $JournalFile -OutFile $OutFile -Algorithm $Algorithm -Root $VideoRoot -StartedUtc $startedUtc
 Write-Log "Done."

@@ -11,19 +11,6 @@ $ErrorActionPreference = 'Stop'
 
 . "$PSScriptRoot\Common-Functions.ps1"
 
-function Write-Log {
-    param([Parameter(Mandatory)][string]$Message)
-    $ts = (Get-Date).ToString('yyyy-MM-dd HH:mm:ss')
-    Write-Host "[$ts] $Message"
-}
-
-function Ensure-Directory {
-    param([Parameter(Mandatory)][string]$Path)
-    if (-not (Test-Path -LiteralPath $Path)) {
-        New-Item -ItemType Directory -Path $Path -Force | Out-Null
-    }
-}
-
 function Copy-FileWithRetry {
     param(
         [Parameter(Mandatory)][string]$SourcePath,
@@ -189,6 +176,10 @@ foreach ($item in $work) {
 }
 
 Write-Progress -Id 1 -Activity "Copying TV" -Completed
+
+Write-Log "Starting the VideoHashIndex script"
+& "$PSScriptRoot\Build-VideoHashIndex-Parallel.ps1" -VideoRoot $DestinationBase -OutFile $($DestinationBase+"\TvHashIndex.clixml") -JournalFile $($DestinationBase+"\TvHashIndex.journal.ndjson")
+
 Write-Log "Done. Copied=$copiedCount Skipped=$skippedCount Total=$totalFiles"
 
 # Optional: remove empty directories under source (safe; only removes empty TOP-LEVEL dirs)

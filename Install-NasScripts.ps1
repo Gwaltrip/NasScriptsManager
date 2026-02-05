@@ -25,20 +25,17 @@ $deploy = @(
     @{ Name = "MovieMover.ps1";                        Root = $NasAddress + "\" + $NasMovieRoot  }
     @{ Name = "Build-ExistingFilesIndex-Parallel.ps1"; Root = $NasAddress + "\" + $NasImagesRoot }
     @{ Name = "Copy-ImagesPhotosIndex-Parallel.ps1";   Root = $NasAddress + "\" + $NasImagesRoot }
+    @{ Name = "Common-Functions.ps1";                   Root = $NasAddress + "\" + $NasAnimeRoot  }
+    @{ Name = "Common-Functions.ps1";                   Root = $NasAddress + "\" + $NasTvRoot     }
+    @{ Name = "Common-Functions.ps1";                   Root = $NasAddress + "\" + $NasMovieRoot  }
+    @{ Name = "Common-Functions.ps1";                   Root = $NasAddress + "\" + $NasImagesRoot }
+    @{ Name = "Build-VideoHashIndex-Parallel.ps1";     Root = $NasAddress + "\" + $NasAnimeRoot  }
+    @{ Name = "Build-VideoHashIndex-Parallel.ps1";     Root = $NasAddress + "\" + $NasTvRoot     }
+    @{ Name = "Build-VideoHashIndex-Parallel.ps1";     Root = $NasAddress + "\" + $NasMovieRoot  }
+    @{ Name = "Build-VideoHashIndex-Parallel.ps1";     Root = $NasAddress + "\" + $NasImagesRoot }
 )
 
-function Write-Log {
-    param([Parameter(Mandatory)][string]$Message)
-    $ts = (Get-Date).ToString('yyyy-MM-dd HH:mm:ss')
-    Write-Host "[$ts] $Message"
-}
-
-function Ensure-Directory {
-    param([Parameter(Mandatory)][string]$Path)
-    if (-not (Test-Path -LiteralPath $Path)) {
-        New-Item -ItemType Directory -Path $Path -Force | Out-Null
-    }
-}
+. "$PSScriptRoot\scripts\Common-Functions.ps1"
 
 $localScriptsDir = Join-Path -Path $RepoRoot -ChildPath $ScriptsFolder
 if (-not (Test-Path -LiteralPath $localScriptsDir)) {

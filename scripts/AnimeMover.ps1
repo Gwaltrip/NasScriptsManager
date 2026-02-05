@@ -131,6 +131,8 @@ function Copy-FileWithRetry {
 # Main
 # ----------------------------
 
+Write-Log "Starting AnimeMover with source: $SourceDirectory"
+Write-Log "Loading config from: $ConfigPath"
 $cfg = Load-AnimeMoverConfig -Path $ConfigPath
 Write-Log "Config loaded: groups=$($cfg.groups -join ', ') | acceptAnyBracketTag=$($cfg.acceptAnyBracketTag) | recurseTaggedFolders=$($cfg.recurseTaggedFolders)"
 Write-Log "Destination base: $DestinationBase"
@@ -208,4 +210,6 @@ foreach ($file in $videoFiles) {
 }
 
 Write-Progress -Id 1 -Activity "Copying files" -Completed
+Write-Log "Starting the VideoHashIndex script"
+& "$PSScriptRoot\Build-VideoHashIndex-Parallel.ps1" -VideoRoot $DestinationBase -OutFile $($DestinationBase+"\AnimeHashIndex.clixml") -JournalFile $($DestinationBase+"\AnimeHashIndex.journal.ndjson")
 Write-Log "Done. Copied=$copiedCount Skipped=$skippedCount Total=$totalFiles"

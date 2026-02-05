@@ -11,12 +11,6 @@ $ErrorActionPreference = 'Stop'
 
 . "$PSScriptRoot\Common-Functions.ps1"
 
-function Ensure-Directory {
-    param([Parameter(Mandatory)][string]$Path)
-    if (-not (Test-Path -LiteralPath $Path)) {
-        New-Item -ItemType Directory -Path $Path -Force | Out-Null
-    }
-}
 
 function Copy-FileWithRetry {
     param(
@@ -173,4 +167,8 @@ foreach ($item in $work) {
 }
 
 Write-Progress -Id 1 -Activity "Copying movies" -Completed
+
+Write-Log "Starting the VideoHashIndex script"
+& "$PSScriptRoot\Build-VideoHashIndex-Parallel.ps1" -VideoRoot $DestinationBase -OutFile $($DestinationBase+"\MovieHashIndex.clixml") -JournalFile $($DestinationBase+"\MovieHashIndex.journal.ndjson")
+
 Write-Log "Done. Copied=$copiedCount Skipped=$skippedCount Total=$totalFiles"
