@@ -65,6 +65,7 @@ foreach ($kv in $existingIndex.GetEnumerator()) {
 }
 
 # Collect files (robust extension filter; avoids -Include edge cases)
+Write-Log "Scanning source files under: $ImageSource"
 $allFiles = Get-ChildItem -Path $ImageSource -Recurse -File -ErrorAction Stop
 Write-Log "Source scan: found $($allFiles.Count) total files under: $ImageSource"
 
