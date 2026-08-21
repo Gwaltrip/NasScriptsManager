@@ -66,10 +66,10 @@ foreach ($kv in $existingIndex.GetEnumerator()) {
 
 # Collect files (robust extension filter; avoids -Include edge cases)
 Write-Log "Scanning source files under: $ImageSource"
-$allFiles = Get-ChildItem -Path $ImageSource -Recurse -File -ErrorAction Stop
+$allFiles = @(Get-ChildItem -Path $ImageSource -Recurse -File -ErrorAction Stop)
 Write-Log "Source scan: found $($allFiles.Count) total files under: $ImageSource"
 
-$filteredByExt = $allFiles | Where-Object { $_.Extension.ToLowerInvariant() -in @('.jpg','.mp4','.xml','.arw') }
+$filteredByExt = @($allFiles | Where-Object { $_.Extension.ToLowerInvariant() -in @('.jpg','.mp4','.xml','.arw') })
 Write-Log "Source filter: $($filteredByExt.Count) files match extensions (.jpg/.mp4/.xml/.arw)"
 
 $images =
@@ -90,6 +90,7 @@ if ($total -eq 0) {
 
 $processed = 0
 $copyQueue = New-Object System.Collections.Generic.List[object]
+$skippedExistingHash = 0
 $hashStart = Get-Date
 
 function Test-AnyExistingPathForHash {
@@ -148,6 +149,8 @@ for ($i = 0; $i -lt $total; $i += $BatchSize) {
         if ($null -eq $r -or [string]::IsNullOrWhiteSpace($r.Hash)) { continue }
 
         if (Test-AnyExistingPathForHash -Hash $r.Hash) {
+            $skippedExistingHash++
+            Add-Content -Path $sentFilesPath -Value $r.FullName
             continue
         }
 
@@ -167,7 +170,7 @@ for ($i = 0; $i -lt $total; $i += $BatchSize) {
                 $etaText = "N/A"
             }
 
-            Write-Log "Checked $processed / $total ($pct%) | Rate: $rate files/sec | ETA: $etaText"
+            Write-Log "Checked $processed / $total ($pct%) | Existing hash skips: $skippedExistingHash | Rate: $rate files/sec | ETA: $etaText"
 
             # Hashing progress bar (updates every 100 processed files)
             $pctInt = [int][math]::Round(($processed / $total) * 100, 0)
@@ -187,7 +190,7 @@ for ($i = 0; $i -lt $total; $i += $BatchSize) {
     } else {
         $etaText = "N/A"
     }
-    Write-Log "Checked $processed / $total ($pct%) | Rate: $rate files/sec | ETA: $etaText"
+    Write-Log "Checked $processed / $total ($pct%) | Existing hash skips: $skippedExistingHash | Rate: $rate files/sec | ETA: $etaText"
 
     # Hashing progress bar (updates once per batch)
     $pctInt = [int][math]::Round(($processed / $total) * 100, 0)
@@ -197,7 +200,7 @@ for ($i = 0; $i -lt $total; $i += $BatchSize) {
 Write-Progress -Activity "Hashing files" -Completed
 
 
-Write-Log "Parallel hashing done. Copying $($copyQueue.Count) files..."
+Write-Log "Parallel hashing done. Copying $($copyQueue.Count) files... Existing hash skips: $skippedExistingHash"
 
 # COPY PHASE (single-thread) + PROGRESS BAR
 $copyTotal = $copyQueue.Count
