@@ -47,7 +47,7 @@ Write-Log "BatchSize:     $BatchSize"
 Write-Log "ReportEvery:   $ReportEvery"
 Write-Log "Scanning destination files..."
 
-$destFiles = Get-ChildItem -Path $ImageTarget -Recurse -File -ErrorAction Stop
+$destFiles = @(Get-ChildItem -Path $ImageTarget -Recurse -File -ErrorAction Stop)
 $total = $destFiles.Count
 Write-Log "Found $total files."
 
